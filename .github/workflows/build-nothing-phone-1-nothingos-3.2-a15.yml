@@ -118,8 +118,6 @@ jobs:
         run: |
           # Only ${{ env.DEVICE_NAME }} use it.
           cd $GITHUB_WORKSPACE/device_kernel
-          # Clang 21+ compatibility
-          sed -i '/hif_err("CE handle is null");/{n;s/return A_ERROR;/return QDF_STATUS_E_NULL_VALUE;/;}' drivers/staging/qca-wifi-host-cmn/hif/src/ce/ce_main.c
           # Add device tree
           echo "⬇️ Cloning Device Tree..."
           git clone https://github.com/NothingOSS/android_kernel_devicetree_nothing_sm7325.git -b "$KERNEL_BRANCH" arch/arm64/boot/dts/vendor
