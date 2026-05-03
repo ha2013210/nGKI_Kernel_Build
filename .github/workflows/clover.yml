@@ -146,8 +146,28 @@ jobs:
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
 
-      - name: ✏️ Upload Build Artifact
+      - name: ✏️ Upload Build Artifact (Absolute capture)
         uses: actions/upload-artifact@v4
         with:
           name: AnyKernel3-${{ env.DEVICE_CODENAME }}-${{ env.ROM_TEXT }}
-          path: ${{ github.workspace }}/out/AnyKernel3-*.zip
+          path: |
+            # 1. 全项目通配（无论嵌套多深）
+            **/AnyKernel3-*.zip
+            **/AK3-*.zip
+            **/*-signed.zip
+            **/kernel-*.zip
+            # 2. 明确设备工作目录下的常见藏身点
+            device_kernel/out/AnyKernel3-*.zip
+            device_kernel/out/AK3-*.zip
+            device_kernel/AnyKernel3-*.zip
+            device_kernel/AK3-*.zip
+            # 3. 直接 out 目录
+            out/AnyKernel3-*.zip
+            out/AK3-*.zip
+            # 4. 根目录兜底（有些脚本乱扔）
+            AnyKernel3-*.zip
+            AK3-*.zip
+            kernel-*.zip
+            # 5. 绝对路径兜底（若 runner 直接写死家目录）
+            /home/runner/work/**/AnyKernel3-*.zip
+            /home/runner/work/**/AK3-*.zip
