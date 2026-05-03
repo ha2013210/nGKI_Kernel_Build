@@ -1,4 +1,4 @@
-name: Build Kernel for MiPad4 (clover) with ReSukiSU + Manual Hook
+name: Xiaomi Mi Pad 4 (LineageOS 15) [clover] ReSukiSU
 
 on:
   workflow_call:
@@ -77,7 +77,7 @@ env:
 
 jobs:
   build-kernel:
-    name: Build Kernel
+    name: Xiaomi Mi Pad 4 (LineageOS 15) [clover] ReSukiSU
     runs-on: ubuntu-latest
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
