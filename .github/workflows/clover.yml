@@ -65,7 +65,7 @@ env:
   NEED_SAFE_DTBO : false
   REKERNEL_ENABLE: "false"
   HOOK_METHOD: "syscall"
-  KERNEL_PATCH: "false"
+  KERNEL_PATCH: "true"
   KPM_ENABLE: "false"
   KPM_INLINE: "false"
   HIDE_STUFF: "false"
