@@ -78,7 +78,7 @@ env:
 
   HIDE_STUFF: "false" # hide some of the features
 
-  GENERATE_DTB: "true" # if u kernel need DTB , but cannot auto generate it. (Only Anykernel3).
+  GENERATE_DTB: "false" # if u kernel need DTB , but cannot auto generate it. (Only Anykernel3).
   GENERATE_CHIP: "qcom" # only supported for qcom and mediatek.
 
   BUILD_DEBUGGER: "false" # Output build errors.
@@ -133,25 +133,6 @@ jobs:
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
-
-      - name: 📦 Build dtbo.img
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-          
-          wget https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O mkdtboimg.py
-          chmod +x mkdtboimg.py
-          
-          echo "Building dtbo.img from compiled .dtbo files..."
-          
-          DTBO_FILES=$(find out/arch/arm64/boot/dts -name "*.dtbo")
-          
-          if [ -z "$DTBO_FILES" ]; then
-            echo "Error: .dtbo files not found. Make sure that kernel builds it."
-            exit 1
-          fi
-          
-          python3 mkdtboimg.py create out/arch/arm64/boot/dtbo.img $DTBO_FILES
-          echo "✅ dtbo.img successfully created: out/arch/arm64/boot/dtbo.img"  
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
