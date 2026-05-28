@@ -1,4 +1,4 @@
-name: Build Xiaomi 12 Lite (LineageOS 23.2 A16)
+name: Build Xiaomi 12 Lite (LineageOS 23 A16)
 
 on:
   workflow_call:
@@ -12,8 +12,8 @@ env:
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CLANG_TRIPLE=aarch64-linux-gnu- TARGET_PRODUCT=taoyao"
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1"
 
-  KERNEL_SOURCE : "https://github.com/cyberc3dr/android_kernel_ximi_taoyao.git"
-  KERNEL_BRANCH : "ximi-a12"
+  KERNEL_SOURCE : "https://github.com/cyberc3dr/kernel_xiaomi_taoyao.git"
+  KERNEL_BRANCH : "bka"
 
   CLANG_SOURCE : "https://github.com/cyberc3dr/clang_mirror/releases/download/clang-r383902b1/clang-r383902b1.tar.gz"
   CLANG_BRANCH : ""
@@ -25,7 +25,7 @@ env:
   GCC_32_BRANCH : "android12L-release"
 
   DEFCONFIG_SOURCE: ""
-  DEFCONFIG_NAME : "vendor/lahaina-qgki_defconfig"
+  DEFCONFIG_NAME : "vendor/taoyao-qgki_defconfig"
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
@@ -84,14 +84,14 @@ env:
   BUILD_DEBUGGER: "false" # Output build errors.
   SKIP_PATCH: "false" # Ignore errors found in Patch Debugger.
 
-  BUILD_OTHER_CONFIG: "true" # Merge config files.
+  BUILD_OTHER_CONFIG: "false" # Merge config files.
   MERGE_CONFIG_FILES: "vendor/debugfs.config,vendor/taoyao_QGKI.config"
 
   FREE_MORE_SPACE: "false" # if u want get more space, enabled it.
 
 jobs:
   build-kernel:
-    name: Build Xiaomi 12 Lite (LineageOS 23.2 A16)
+    name: Build Xiaomi 12 Lite (LineageOS 23 A16)
     runs-on: ubuntu-latest # u can changed to ubuntu 22.04, and need container set ubuntu-latest
     # container: ubuntu:focal # if u need use arch linux -> archlinux/archlinux:latest or ubuntu 20.04 -> ubuntu:focal
     env:
