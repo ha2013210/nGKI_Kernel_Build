@@ -12,8 +12,8 @@ env:
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CLANG_TRIPLE=aarch64-linux-gnu-"
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1"
 
-  KERNEL_SOURCE : "https://github.com/William24hmar/nothing_android_kernel_sm7325.git"
-  KERNEL_BRANCH : "Lineage23-Rebase"
+  KERNEL_SOURCE : "https://github.com/cyberc3dr/android_kernel_nothing_sm7325.git"
+  KERNEL_BRANCH : "Los23-Rebase"
 
   CLANG_SOURCE : "https://github.com/bachnxuan/aosp_clang_mirror/releases/download/clang-r563880c-13989888/clang-r563880c.tar.gz"
   CLANG_BRANCH : ""
@@ -60,7 +60,7 @@ env:
   PATCHES_BRANCH: "nothing_kernel" # [your_branch] -> main
 
   SUSFS_FOLDER_FIXED: "np1" # Fill in your patch prefix directory here. Leave it blank if there isn't one. -> your_folder
-  SUSFS_PATCH_FIXED: "susfs_fixed" # Fill in your patches here. If there are multiple patches, please separate them with a comma. Leave it blank if there isn't one. -> patch1,patch2
+  SUSFS_PATCH_FIXED: "susfs_fix_fdc" # Fill in your patches here. If there are multiple patches, please separate them with a comma. Leave it blank if there isn't one. -> patch1,patch2
 
   REKERNEL_ENABLE: "false" # if u need Re:Kernel.
 
