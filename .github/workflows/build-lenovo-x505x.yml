@@ -1,0 +1,2 @@
+KERNEL_SOURCE: "https://github.com"
+KERNEL_DEFCONFIG: "msm8937_defconfig"
