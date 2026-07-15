@@ -1,2 +1,21 @@
-KERNEL_SOURCE: "https://github.com"
-KERNEL_DEFCONFIG: "msm8937_defconfig"
+name: Build Lenovo Kernel
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: Build Kernel for X505X
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Kernel Matrix Engine
+        uses: ./.github/workflows/build-kernel.yml
+        with:
+          KERNEL_SOURCE: "https://github.com"
+          KERNEL_DEFCONFIG: "msm8937_defconfig"
+          TARGET_ARCH: "arm64"
+          ENABLE_KSU: true
+          ENABLE_SUSFS: true
