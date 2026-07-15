@@ -45,3 +45,12 @@ jobs:
       fail-fast: true
     uses: ./.github/workflows/build-oneplus-8-series-oos13-a13-xtd.yml
     secrets: inherit
+
+# Lenovo
+build-lenovo-x505x:
+  name: "build Lenovo Tab M10 HD (LineageOS 23.2)"
+  strategy:
+    fail-fast: true
+  uses: ./.github/workflows/build-lenovo-x505x.yml
+  secrets: inherit
+  
