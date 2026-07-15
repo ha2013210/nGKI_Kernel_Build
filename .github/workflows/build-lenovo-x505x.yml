@@ -1,21 +1,118 @@
 name: Build Lenovo Kernel
 
 on:
-  workflow_call:
+  workflow_dispatch:
+
+env:
+  # Device Env Setup
+  DEVICE_NAME : "Lenovo Tab M10 HD"
+  DEVICE_CODENAME : "X505X"
+
+  CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CLANG_TRIPLE=aarch64-linux-gnu-"
+  EXTRA_CMDS : "LLVM=1 LLVM_IAS=1"
+
+  KERNEL_SOURCE : "https://github.com"
+  KERNEL_BRANCH : "master"
+
+  CLANG_SOURCE : "https://github.com"
+  CLANG_BRANCH : ""
+
+  GCC_GNU : true
+  GCC_64_SOURCE : "https://googlesource.com"
+  GCC_64_BRANCH : "android12L-release"
+  GCC_32_SOURCE : "https://googlesource.com"
+  GCC_32_BRANCH : "android12L-release"
+
+  DEFCONFIG_SOURCE: ""
+  DEFCONFIG_NAME : "msm8937_defconfig"
+  DEFCONFIG_ORIGIN_IMAGE: ""
+  DEFCONFIG_FROM_BOOT: false
+
+  KERNELSU_SOURCE : ""
+  KERNELSU_BRANCH : ""
+
+  KERNELSU_AUTO_GET : "true"
+  KERNELSU_AUTO_FORK : "sukisu"
+
+  SUSFS_ENABLE : true
+  SUSFS_FIXED : false
+
+  AK3_SOURCE : "https://github.com"
+  AK3_BRANCH : "master"
+
+  BOOT_SOURCE : ""
+  NEED_DTBO : false
+  NEED_SAFE_DTBO : false
+
+  ROM_TEXT : "lineageos_23.2"
+  PYTHON_VERSION: "3"
+  PACK_METHOD: "AnyKernel3"
+  PACK_MODULES: "false"
+  KERNELSU_METHOD: "shell"
+  PATCHES_SOURCE: ""
+  PATCHES_BRANCH: ""
+  SUSFS_FOLDER_FIXED: ""
+  SUSFS_PATCH_FIXED: ""
+  REKERNEL_ENABLE: "false"
+  HOOK_METHOD: "syscall"
+  KPM_ENABLE: "false"
+  KPM_INLINE: "false"
+  KPM_KPATCH_NEXT: "false"
+  KPM_PATCH_SOURCE: "https://githubusercontent.com"
+  BASEBAND_GUARD_ENABLE: "false"
+  BASEBAND_GUARD_BOOT: "false"
+  HIDE_STUFF: "false"
+  GENERATE_DTB: "false"
+  GENERATED_CHIP: "qcom"
+  BUILD_DEBUGGER: "false"
+  SKIP_PATCH: "false"
+  BUILD_OTHER_CONFIG: "false"
+  MERGE_CONFIG_FILES: "vendor/debugfs.config,vendor/lahaina_GKI.config"
+  FREE_WORK_SPACE: "false"
 
 jobs:
-  build:
-    name: Build Kernel for X505X
+  build-kernel:
+    name: Lenovo Tab M10 HD (LineageOS 23.2 A16)
     runs-on: ubuntu-latest
+    env:
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_HARDLINK: "true"
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Kernel Matrix Engine
-        uses: ./.github/workflows/build-kernel.yml
-        with:
-          KERNEL_SOURCE: "https://github.com"
-          KERNEL_DEFCONFIG: "msm8937_defconfig"
-          TARGET_ARCH: "arm64"
-          ENABLE_KSU: true
-          ENABLE_SUSFS: true
+      - name: 🛠️ Compilation environment preparation
+        uses: ./.github/workflows/build-env
+
+      - name: 📦 Get neccssary tools
+        uses: ./.github/workflows/build-ready
+
+      - name: 🔐 Patch Kernel of SUSFS
+        uses: ./.github/workflows/patch-susfs
+
+      - name: 🔧 Patch for no-kprobe
+        uses: ./.github/workflows/patch-no-kprobe
+
+      - name: 🛠️ Extra Kernel Options
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+
+      - name: 🔄 Patch Kernel of ReKernel
+        uses: ./.github/workflows/patch-rekernel
+
+      - name: 🛡️ Patch Kernel of Baseband Guard
+        uses: ./.github/workflows/patch-baseband-guard
+
+      - name: 🥷 Patch Hide Stuff
+        uses: ./.github/workflows/patch-hide-stuff
+
+      - name: 🏗️ Build Process
+        uses: ./.github/workflows/build-process
+
+      - name: 📦 Pack Process
+        uses: ./.github/workflows/pack-process
+
+      - name: 📤 Upload Artifacts
+        uses: ./.github/workflows/upload-files
