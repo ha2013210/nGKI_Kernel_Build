@@ -53,3 +53,4 @@ build-lenovo-x505x:
     fail-fast: true
   uses: ./.github/workflows/build-lenovo-x505x.yml
   secrets: inherit
+
