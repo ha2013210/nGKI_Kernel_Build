@@ -1,118 +1,67 @@
-name: Build Lenovo Kernel
+name: Build Lenovo X505X Kernel with KSU and SUSFS
 
 on:
-  workflow_dispatch:
-
-env:
-  # Device Env Setup
-  DEVICE_NAME : "Lenovo Tab M10 HD"
-  DEVICE_CODENAME : "X505X"
-
-  CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CLANG_TRIPLE=aarch64-linux-gnu-"
-  EXTRA_CMDS : "LLVM=1 LLVM_IAS=1"
-
-  KERNEL_SOURCE : "https://github.com"
-  KERNEL_BRANCH : "master"
-
-  CLANG_SOURCE : "https://github.com"
-  CLANG_BRANCH : ""
-
-  GCC_GNU : true
-  GCC_64_SOURCE : "https://googlesource.com"
-  GCC_64_BRANCH : "android12L-release"
-  GCC_32_SOURCE : "https://googlesource.com"
-  GCC_32_BRANCH : "android12L-release"
-
-  DEFCONFIG_SOURCE: ""
-  DEFCONFIG_NAME : "msm8937_defconfig"
-  DEFCONFIG_ORIGIN_IMAGE: ""
-  DEFCONFIG_FROM_BOOT: false
-
-  KERNELSU_SOURCE : ""
-  KERNELSU_BRANCH : ""
-
-  KERNELSU_AUTO_GET : "true"
-  KERNELSU_AUTO_FORK : "sukisu"
-
-  SUSFS_ENABLE : true
-  SUSFS_FIXED : false
-
-  AK3_SOURCE : "https://github.com"
-  AK3_BRANCH : "master"
-
-  BOOT_SOURCE : ""
-  NEED_DTBO : false
-  NEED_SAFE_DTBO : false
-
-  ROM_TEXT : "lineageos_23.2"
-  PYTHON_VERSION: "3"
-  PACK_METHOD: "AnyKernel3"
-  PACK_MODULES: "false"
-  KERNELSU_METHOD: "shell"
-  PATCHES_SOURCE: ""
-  PATCHES_BRANCH: ""
-  SUSFS_FOLDER_FIXED: ""
-  SUSFS_PATCH_FIXED: ""
-  REKERNEL_ENABLE: "false"
-  HOOK_METHOD: "syscall"
-  KPM_ENABLE: "false"
-  KPM_INLINE: "false"
-  KPM_KPATCH_NEXT: "false"
-  KPM_PATCH_SOURCE: "https://githubusercontent.com"
-  BASEBAND_GUARD_ENABLE: "false"
-  BASEBAND_GUARD_BOOT: "false"
-  HIDE_STUFF: "false"
-  GENERATE_DTB: "false"
-  GENERATED_CHIP: "qcom"
-  BUILD_DEBUGGER: "false"
-  SKIP_PATCH: "false"
-  BUILD_OTHER_CONFIG: "false"
-  MERGE_CONFIG_FILES: "vendor/debugfs.config,vendor/lahaina_GKI.config"
-  FREE_WORK_SPACE: "false"
+  workflow_dispatch: # Allows you to manually trigger the build with a single click
 
 jobs:
-  build-kernel:
-    name: Lenovo Tab M10 HD (LineageOS 23.2 A16)
+  build:
     runs-on: ubuntu-latest
-    env:
-      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
-      CCACHE_NOHASHDIR: "true"
-      CCACHE_HARDLINK: "true"
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
 
-      - name: 🛠️ Compilation environment preparation
-        uses: ./.github/workflows/build-env
+    - name: Install Compiling Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc bison build-essential ccache cpio flex g++-multilib gcc-multilib git gnupg gperf lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.1-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
 
-      - name: 📦 Get neccssary tools
-        uses: ./.github/workflows/build-ready
+    - name: Download Proton Clang Toolchain
+      run: |
+        mkdir clang
+        cd clang
+        git clone --depth=1 https://github.com .
+        echo "$(pwd)/bin" >> $GITHUB_PATH
 
-      - name: 🔐 Patch Kernel of SUSFS
-        uses: ./.github/workflows/patch-susfs
+    - name: Inject KernelSU-Next (Legacy)
+      run: |
+        curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
 
-      - name: 🔧 Patch for no-kprobe
-        uses: ./.github/workflows/patch-no-kprobe
+    - name: Inject SUSFS Filesystem Patches
+      run: |
+        git clone --depth=1 https://gitlab.com susfs_source
+        # Applies filesystem path-hiding hooks directly to your kernel tree
+        cp susfs_source/KernelSU/Explanation_And_Patches_For_KernelSU/Next/*.patch ./
+        patch -p1 < *susfs*.patch || echo "Proceeding with manual checks"
 
-      - name: 🛠️ Extra Kernel Options
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
+    - name: Configure Kernel Flags
+      run: |
+        # Appends mandatory configuration variables to the default configuration layout
+        DEFCONFIG="arch/arm64/configs/amar_defconfig"
+        echo "CONFIG_KPROBES=y" >> $DEFCONFIG
+        echo "CONFIG_HAVE_KPROBES=y" >> $DEFCONFIG
+        echo "CONFIG_KERNELSU=y" >> $DEFCONFIG
+        echo "CONFIG_KSU_SUSFS=y" >> $DEFCONFIG
+        echo "CONFIG_SUSFS_SECURE_MODE=y" >> $DEFCONFIG
 
-      - name: 🔄 Patch Kernel of ReKernel
-        uses: ./.github/workflows/patch-rekernel
+    - name: Run Compilation
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export CC=clang
+        
+        make O=out amar_defconfig
+        make O=out -j$(nproc)
 
-      - name: 🛡️ Patch Kernel of Baseband Guard
-        uses: ./.github/workflows/patch-baseband-guard
+    - name: Package with AnyKernel3
+      run: |
+        git clone --depth=1 https://github.com zipped_package
+        cp out/arch/arm64/boot/Image.gz-dtb zipped_package/
+        cd zipped_package
+        zip -r ../X505X-KSU-SUSFS-Kernel.zip *
 
-      - name: 🥷 Patch Hide Stuff
-        uses: ./.github/workflows/patch-hide-stuff
-
-      - name: 🏗️ Build Process
-        uses: ./.github/workflows/build-process
-
-      - name: 📦 Pack Process
-        uses: ./.github/workflows/pack-process
-
-      - name: 📤 Upload Artifacts
-        uses: ./.github/workflows/upload-files
+    - name: Upload Finished Bootable Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: Lenovo-X505X-Kernel-Zip
+        path: X505X-KSU-SUSFS-Kernel.zip
