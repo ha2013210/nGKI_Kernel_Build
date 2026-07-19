@@ -1,10 +1,10 @@
 name: Build Lenovo X505X Kernel with KSU and SUSFS
 
 on:
-  workflow_dispatch: # Allows you to manually trigger the build with a single click
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-kernel:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Source Code
@@ -17,25 +17,23 @@ jobs:
 
     - name: Download Proton Clang Toolchain
       run: |
-        mkdir clang
+        mkdir -p clang
         cd clang
         git clone --depth=1 https://github.com .
         echo "$(pwd)/bin" >> $GITHUB_PATH
 
-    - name: Inject KernelSU-Next (Legacy)
+    - name: Inject KernelSU-Next Legacy
       run: |
-        curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
+        curl -LSs "https://githubusercontent.com" | bash -s legacy
 
     - name: Inject SUSFS Filesystem Patches
       run: |
         git clone --depth=1 https://gitlab.com susfs_source
-        # Applies filesystem path-hiding hooks directly to your kernel tree
         cp susfs_source/KernelSU/Explanation_And_Patches_For_KernelSU/Next/*.patch ./
-        patch -p1 < *susfs*.patch || echo "Proceeding with manual checks"
+        patch -p1 < *susfs*.patch || echo "Patch applied with warnings or skipped"
 
     - name: Configure Kernel Flags
       run: |
-        # Appends mandatory configuration variables to the default configuration layout
         DEFCONFIG="arch/arm64/configs/amar_defconfig"
         echo "CONFIG_KPROBES=y" >> $DEFCONFIG
         echo "CONFIG_HAVE_KPROBES=y" >> $DEFCONFIG
@@ -49,15 +47,17 @@ jobs:
         export SUBARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
         export CC=clang
-        
         make O=out amar_defconfig
         make O=out -j$(nproc)
 
     - name: Package with AnyKernel3
       run: |
         git clone --depth=1 https://github.com zipped_package
-        cp out/arch/arm64/boot/Image.gz-dtb zipped_package/
+        cp out/arch/arm64/boot/Image.gz-dtb zipped_package/ || cp out/arch/arm64/boot/Image zipped_package/
         cd zipped_package
+        sed -i 's/kernel.string=./kernel.string=Amar Kernel with KSU + SUSFS/g' anykernel.sh
+        sed -i 's|block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;|block=/dev/block/bootdevice/by-name/boot;|g' anykernel.sh
+        sed -i 's/is_slot_device=0;/is_slot_device=0;\nflash_block=boot;/g' anykernel.sh
         zip -r ../X505X-KSU-SUSFS-Kernel.zip *
 
     - name: Upload Finished Bootable Package
@@ -65,3 +65,4 @@ jobs:
       with:
         name: Lenovo-X505X-Kernel-Zip
         path: X505X-KSU-SUSFS-Kernel.zip
+        
